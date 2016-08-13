@@ -5,6 +5,7 @@
  *      Author: Bill.Chatfield
  */
 
+#include <stdio.h>
 #include <stdarg.h>	/* va_arg, va_start */
 #include <stdint.h>
 #include <stdlib.h>
@@ -144,7 +145,7 @@ wchar_t *wconcatUInt32(const wchar_t *s, uint32_t n)
 
     /* There can be no buffer overrun because a uint32_t cannot
        exceed the number of characters in the buffer. */
-    wsprintf(numbertext, L"%u", n);
+    _swprintf(numbertext, L"%u", n);
     return wconcat(s, numbertext);
 }
 
