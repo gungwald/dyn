@@ -59,39 +59,104 @@ wchar_t *wconcat(const wchar_t *s, const wchar_t *t)
     return result;
 }
 
+wchar_t *wconcatn(size_t argCount, ...)
+{
+	va_list args;
+	wchar_t *s;
+	size_t totalLength = 0;
+	wchar_t *result;
+	size_t i;
+
+	/* Calculate total length of result string. */
+	va_start(args, argCount);
+	for (i = 0; i < argCount; i++) {
+		s = va_arg(args, wchar_t*);
+		/* NULL input parameters are treated like an empty string and
+		   therefore do not cause an error. */
+		if (s != NULL) {
+			totalLength += wcslen(s);
+		}
+	}
+	va_end(args);
+
+	result = (wchar_t *)malloc((totalLength + 1) * sizeof(wchar_t));
+	if (result != NULL) {
+		result[0] = '\0';
+		va_start(args, argCount);
+		for (i = 0; i < argCount; i++) {
+			s = va_arg(args, wchar_t*);
+			/* NULL arguments will be treated like empty strings and will
+			   not cause an error. */
+			if (s != NULL) {
+				wcscat(result, s);
+			}
+		}
+		va_end(args);
+	}
+	else {
+		_wperror(L"wconcatn");
+	}
+	return result;
+}
+
+/**
+ * Concatenates a list of strings terminated by a NULL character. This
+ * inherently cannot differentiate between the NULL at the end and any
+ * other argument that was accidentally passed as NULL.
+ *
+ * @arg first	The first string in the list to be included in the
+ * 				resulting concatenated string. If it is NULL, the
+ * 				concatenation process ends and a dynamically allocated
+ * 				empty string (containing one NULL character) is
+ * 				returned.
+ * @return	A dynamically allocated string consisting of all arguments
+ * 			or NULL if a memory allocation error occurred. The caller
+ * 			must free the returned string. So, if the result is a zero
+ * 			length (empty) string, it will be a dynamically allocated
+ * 			array of one NULL character.
+ */
 wchar_t *wconcatv(const wchar_t *first, ...)
 {
-	va_list argPtr;
+	va_list args;
 	wchar_t *s;
 	size_t totalLength;
 	wchar_t *result;
 
 	if (first == NULL) {
-		s = L"";
+		result = malloc(sizeof(wchar_t));
+		if (result != NULL) {
+			result[0] = '\0';
+		}
+		else {
+			_wperror(L"wconcatv");
+		}
 	}
 	else {
-		s = first;
-	}
-
-	/* Calculate total length of result string. */
-	totalLength = wcslen(s);
-	va_start(argPtr, first);
-	while ((s = va_arg(argPtr, wchar_t*)) != NULL) {
-		totalLength += wcslen(s);
-	}
-	va_end(argPtr);
-
-	result = (wchar_t *)malloc((totalLength + 1) * sizeof(wchar_t));
-	if (result != NULL) {
-		va_start(argPtr, first);
-		wcscpy(result, first);
-		while ((s = va_arg(argPtr, wchar_t*)) != NULL) {
-			wcscat(result, s);
+		/* Calculate total length. */
+		totalLength = wcslen(first);
+		va_start(args, first);
+		while ((s = va_arg(args, wchar_t*)) != NULL) {
+			totalLength += wcslen(s);
 		}
-		va_end(argPtr);
+		va_end(args);
+
+		/* Build concatenated result string. */
+		result = (wchar_t *)malloc((totalLength + 1) * sizeof(wchar_t));
+		if (result != NULL) {
+			va_start(args, first);
+			wcscpy(result, first);
+			while ((s = va_arg(args, wchar_t*)) != NULL) {
+				wcscat(result, s);
+			}
+			va_end(args);
+		}
+		else {
+			_wperror(L"wconcatn");
+		}
 	}
 	return result;
 }
+
 /**
  * Concatenates s & t, just like the plus operator in Java. The return
  * value is malloc'd so the caller must free it.
@@ -155,5 +220,3 @@ wchar_t *wconcatUInt32(const wchar_t *s, uint32_t n)
     _swprintf(numbertext, L"%u", n);
     return wconcat(s, numbertext);
 }
-
-
