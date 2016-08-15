@@ -66,8 +66,15 @@ wchar_t *wconcatv(const wchar_t *first, ...)
 	size_t totalLength;
 	wchar_t *result;
 
+	if (first == NULL) {
+		s = L"";
+	}
+	else {
+		s = first;
+	}
+
 	/* Calculate total length of result string. */
-	totalLength = wcslen(first);
+	totalLength = wcslen(s);
 	va_start(argPtr, first);
 	while ((s = va_arg(argPtr, wchar_t*)) != NULL) {
 		totalLength += wcslen(s);
